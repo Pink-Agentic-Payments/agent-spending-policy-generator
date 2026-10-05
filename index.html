@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Agent Spending Policy Generator | Pink Agentic AI Payments</title>
+<meta name="description" content="Answer 6 short questions about your AI agent and get a plain-English spending policy, the matching rules JSON, and a live test against a free Pink sandbox that shows the allow, ask and block decisions in real time.">
+<link rel="canonical" href="https://pinkwallet.com/agentic/tools/policy-generator">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "AI Agent Spending Policy Generator",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Any (web)",
+  "description": "Generates a plain-English AI agent spending policy and the matching Pink rules JSON from 6 short questions, with a live test against a free sandbox.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "url": "https://pinkwallet.com/agentic/tools/policy-generator"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is an AI agent spending policy?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A spending policy is a set of rules that decide, for every payment an AI agent tries to make, whether it is allowed automatically, sent to a human for approval, or blocked. Rules are checked in order and the first one that matches a payment decides the outcome." }
+    },
+    {
+      "@type": "Question",
+      "name": "How does this generator turn my answers into rules?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Each answer maps to one field in a Pink rule: what the agent buys becomes a payee category, your auto-approve limit becomes an allow rule's maximum, your approver choice becomes that rule's approvers, and an optional daily hard stop becomes a block rule with no approval path. The generator never invents a rule shape the sandbox does not support." }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Try it live move real money?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. Try it live creates a free sandbox workspace with test money and test payees, loads your generated rules into it, and fires a few policy checks so you can see the allow, ask and block decisions. No real payment ever executes." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use the generated rules outside the sandbox?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The rules JSON is the format the Pink sandbox API accepts today, and the copyable curl script shows exactly which endpoints load it. Production access is by early access; if you want to carry a sandbox policy over, request early access on pinkwallet.com/agentic." }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens to a payment that does not match any rule?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The default is block. The policy engine checks rules top to bottom and stops at the first match; if nothing matches, the payment is blocked, not allowed by default." }
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#fff;--bg2:#fff5f8;--bg3:#f6e7ec;--line:#f2e6ea;--line2:#e8d5dc;--ink:#23151d;--ink2:#6e5f67;--ink3:#8d7f87;--pink:#ff82a3;--pinkt:#e75c82;--ok:#158a5a;--oks:#e2f5ec;--warn:#c2730c;--warns:#fdf0d8;--bad:#cc2f3a;--bads:#fce4e6}
+*{box-sizing:border-box}
+body{margin:0;font:14.5px/1.6 'Plus Jakarta Sans',-apple-system,'Helvetica Neue',Arial,sans-serif;color:var(--ink);background:var(--bg)}
+a{color:var(--pinkt);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3{margin:0;line-height:1.25;letter-spacing:-.01em}
+h1{font-size:30px;font-weight:800}
+h2{font-size:20px;font-weight:800;margin:36px 0 10px}
+h3{font-size:15px;font-weight:700;margin:0 0 6px}
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px 90px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:28px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800}
+.brand .m{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#ff82a3,#e75c82);flex:none}
+.brand small{display:block;font-weight:600;color:var(--ink3);font-size:11px;letter-spacing:.06em}
+.tag{display:inline-block;font:600 11px/1 ui-monospace,Menlo,monospace;letter-spacing:.05em;text-transform:uppercase;padding:4px 9px;border-radius:999px;background:var(--bg3);color:var(--ink2)}
+.tag.ok{background:var(--oks);color:var(--ok)}
+.tag.warn{background:var(--warns);color:var(--warn)}
+.tag.bad{background:var(--bads);color:var(--bad)}
+.tag.pink{background:var(--bg2);color:var(--pinkt)}
+.lede{color:var(--ink2);font-size:15.5px;margin:12px 0 0;max-width:640px}
+.card{border:1px solid var(--line);border-radius:18px;padding:20px 22px;background:#fff;box-shadow:0 10px 30px rgba(35,21,29,.03);margin-bottom:16px}
+.card.pink{background:var(--bg2);border-color:#f9dbe5}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr}
+@media(max-width:700px){.g2{grid-template-columns:1fr}}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:999px;font-weight:700;font-size:13.5px;border:1px solid var(--line2);background:#fff;color:var(--ink);cursor:pointer}
+.btn.p{background:var(--pink);color:#fff;border-color:transparent;box-shadow:0 10px 26px rgba(255,130,163,.35)}
+.btn.ok{background:var(--ok);color:#fff;border-color:transparent}
+.btn.sm{padding:6px 12px;font-size:12.5px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:not(:disabled):hover{filter:brightness(0.97)}
+input,select{font:inherit;padding:10px 12px;border:1px solid var(--line2);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+label{display:block;font-size:12.5px;font-weight:700;color:var(--ink2);margin:14px 0 5px}
+label:first-child{margin-top:0}
+.hint{font-size:12px;color:var(--ink3);margin-top:4px}
+pre{font:12.5px/1.6 ui-monospace,Menlo,monospace;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+ol.policy{padding-left:22px;margin:10px 0}
+ol.policy li{margin-bottom:8px}
+.q{margin-bottom:6px}
+.radiogrid{display:grid;gap:8px;margin-top:4px}
+.radiogrid label.opt{display:flex;align-items:flex-start;gap:8px;font-weight:600;color:var(--ink);padding:9px 11px;border:1px solid var(--line2);border-radius:10px;margin:0;cursor:pointer}
+.radiogrid label.opt input{width:auto;margin-top:3px}
+.radiogrid label.opt:hover{background:var(--bg2)}
+.resultrow{display:flex;align-items:center;gap:10px;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.resultrow .meta{color:var(--ink3);font-size:12.5px}
+footer{margin-top:46px;padding-top:18px;border-top:1px solid var(--line);color:var(--ink3);font-size:12.5px}
+.faq details{border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:8px;background:#fff}
+.faq summary{font-weight:700;cursor:pointer}
+.faq p{margin:8px 0 0;color:var(--ink2)}
+.trace{font:12px/1.6 ui-monospace,Menlo,monospace;color:var(--ink2);background:var(--bg2);border-radius:10px;padding:10px 12px;margin-top:6px}
+.copybtnwrap{display:flex;justify-content:flex-end;margin:-6px 0 6px}
+.badge-allow{background:var(--oks);color:var(--ok)}
+.badge-ask{background:var(--warns);color:var(--warn)}
+.badge-block{background:var(--bads);color:var(--bad)}
+.badge{font:700 11px/1 ui-monospace,Menlo,monospace;text-transform:uppercase;padding:4px 10px;border-radius:999px;letter-spacing:.04em}
+.steplabel{font-size:12px;color:var(--ink3);margin-bottom:2px}
+.sectionnote{color:var(--ink3);font-size:12.5px;margin-top:-6px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <div class="brand"><div class="m"></div><div><div>Pink Agentic AI Payments</div><small>SANDBOX TOOL</small></div></div>
+    <span class="tag pink">Free · no signup</span>
+  </div>
+
+  <h1>AI agent spending policy generator</h1>
+  <p class="lede">Answer 6 questions about one AI agent. Get a plain-English spending policy, the exact rules JSON, and a live test against a free sandbox that shows the allow, ask and block decisions happen for real.</p>
+  <p class="sectionnote">Updated 2026-10-05</p>
+
+  <div class="card">
+    <p style="margin:0;font-weight:700">Pink Agentic AI Payments enforces per-agent spending policies at the MCP layer, before a payment executes.</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">1. What does the agent buy?</h2>
+    <div class="radiogrid" id="q1"></div>
+
+    <h2>2. Monthly budget for this agent</h2>
+    <label for="q2">Dollars per month ($)</label>
+    <input id="q2" type="number" min="1" value="3000">
+
+    <h2>3. Auto-approve each payment up to</h2>
+    <label for="q3">Dollars per payment ($)</label>
+    <input id="q3" type="number" min="1" value="50">
+    <p class="hint">Payments at or under this amount go through with no human in the loop.</p>
+
+    <h2>4. Above that, who approves?</h2>
+    <div class="radiogrid" id="q4"></div>
+
+    <h2>5. Hard stop above (per day), no approval path?</h2>
+    <label for="q5">Optional. Leave blank for no hard stop.</label>
+    <input id="q5" type="number" min="1" placeholder="e.g. 200">
+    <p class="hint">If this agent's category spend would pass this amount in one day, the payment is blocked outright, even for someone who could normally approve it.</p>
+
+    <h2>6. Always block gift cards, crypto and gambling payees?</h2>
+    <div class="radiogrid" id="q6"></div>
+
+    <div style="margin-top:20px">
+      <button class="btn p" id="generateBtn" onclick="generate()">Generate policy</button>
+    </div>
+  </div>
+
+  <div id="output" style="display:none">
+
+    <div class="card">
+      <h2 style="margin-top:0">Your plain-English policy</h2>
+      <ol class="policy" id="policyText"></ol>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0">Rules JSON</h2>
+      <div class="copybtnwrap"><button class="btn sm" onclick="copyText('rulesJson')">Copy JSON</button></div>
+      <pre id="rulesJson"></pre>
+
+      <h3 style="margin-top:18px">Load it with curl</h3>
+      <div class="copybtnwrap"><button class="btn sm" onclick="copyText('curlScript')">Copy curl script</button></div>
+      <pre id="curlScript"></pre>
+      <p class="hint">Replace the placeholders with your own workspace's admin key and agent id once you have one. These three calls are exactly what the "Try it live" button below runs in your browser against a free sandbox workspace.</p>
+    </div>
+
+    <div class="card pink">
+      <h2 style="margin-top:0">Try it live</h2>
+      <p style="margin:0 0 12px;color:var(--ink2)">Creates a free sandbox workspace, loads these exact rules onto a matching agent, then runs 3 test payments sized from your answers above through the policy check so you can see allow, ask and block happen for real. Sandbox only, test money, nothing here touches your production account.</p>
+      <button class="btn ok" id="tryLiveBtn" onclick="tryLive()">Create sandbox workspace and run it</button>
+      <div id="liveStatus" style="margin-top:14px"></div>
+      <div id="liveResults"></div>
+      <div id="liveLinks" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <h2>FAQ</h2>
+  <div class="faq">
+    <details open>
+      <summary>What is an AI agent spending policy?</summary>
+      <p>A spending policy is a set of rules that decide, for every payment an AI agent tries to make, whether it is allowed automatically, sent to a human for approval, or blocked. Rules are checked in order and the first one that matches a payment decides the outcome.</p>
+    </details>
+    <details>
+      <summary>How does this generator turn my answers into rules?</summary>
+      <p>Each answer maps to one field in a Pink rule: what the agent buys becomes a payee category, your auto-approve limit becomes an allow rule's maximum, your approver choice becomes that rule's approvers, and an optional daily hard stop becomes a block rule with no approval path. The generator never invents a rule shape the sandbox does not support.</p>
+    </details>
+    <details>
+      <summary>Does Try it live move real money?</summary>
+      <p>No. Try it live creates a free sandbox workspace with test money and test payees, loads your generated rules into it, and fires a few policy checks so you can see the allow, ask and block decisions. No real payment ever executes.</p>
+    </details>
+    <details>
+      <summary>Can I use the generated rules outside the sandbox?</summary>
+      <p>The rules JSON is the format the Pink sandbox API accepts today, and the copyable curl script shows exactly which endpoints load it. Production access is by early access; if you want to carry a sandbox policy over, request early access on pinkwallet.com/agentic.</p>
+    </details>
+    <details>
+      <summary>What happens to a payment that does not match any rule?</summary>
+      <p>The default is block. The policy engine checks rules top to bottom and stops at the first match; if nothing matches, the payment is blocked, not allowed by default.</p>
+    </details>
+  </div>
+
+  <footer>
+    <p>Sandbox only. Test values, no money moves.</p>
+    <p>40 simultaneous $7 payments against a $200/day rule: 28 allowed ($196), 12 blocked. Verified on the live sandbox with test money, 2026-10-05.</p>
+    <p>
+      <a href="https://pinkwallet.com/agentic/?utm_source=policy-generator&utm_medium=tool&utm_campaign=policy-generator">pinkwallet.com/agentic</a>
+      &nbsp;·&nbsp;
+      <a href="https://pinkwallet.com/agentic/developers/?utm_source=policy-generator&utm_medium=tool&utm_campaign=policy-generator">Developer docs</a>
+      &nbsp;·&nbsp;
+      <a href="https://agentic-sandbox.pinkwallet.com/?utm_source=policy-generator&utm_medium=tool&utm_campaign=policy-generator">Sandbox</a>
+    </p>
+  </footer>
+
+</div>
+
+<script>
+// ---- Bucket map: each option ties to a real template + agent + payee category
+// that exists in the Pink agentic sandbox (verified against templates.ts).
+var BUCKETS = {
+  api: { label: 'API credits (OpenAI, Anthropic, model inference)', template: 'startup', agentId: 'a_eng', agentLabel: 'Eng Infra AI', cat: 'api', payeeId: 'p_openai', payeeLabel: 'OpenAI', ownerId: 'cto', ownerLabel: 'Omar Haddad (CTO)', financeId: 'cfo', financeLabel: 'Sarah Kim (CFO)' },
+  cloud: { label: 'Cloud infrastructure (AWS, GCP)', template: 'startup', agentId: 'a_eng', agentLabel: 'Eng Infra AI', cat: 'cloud', payeeId: 'p_aws', payeeLabel: 'Amazon Web Services', ownerId: 'cto', ownerLabel: 'Omar Haddad (CTO)', financeId: 'cfo', financeLabel: 'Sarah Kim (CFO)' },
+  ads: { label: 'Ad spend (Google, Meta, LinkedIn)', template: 'startup', agentId: 'a_mkt', agentLabel: 'Marketing AI', cat: 'ads', payeeId: 'p_gads', payeeLabel: 'Google Ads', ownerId: 'ceo', ownerLabel: 'Daniel Park (CEO)', financeId: 'cfo', financeLabel: 'Sarah Kim (CFO)' },
+  supplies: { label: 'Supplies from approved vendors', template: 'coffee', agentId: 'a_purch', agentLabel: 'Purchasing AI', cat: 'supplier', payeeId: 'p_sysco', payeeLabel: 'Sysco', ownerId: 'manager', ownerLabel: 'Luis Ortega (Store manager)', financeId: 'owner', financeLabel: 'Maya Chen (Owner)' },
+  refunds: { label: 'Customer refunds', template: 'ecommerce', agentId: 'a_cs', agentLabel: 'Customer Service AI', cat: 'refund', payeeId: 'p_stripe', payeeLabel: 'Stripe (refunds)', ownerId: 'cs', ownerLabel: 'Nina Chua (CS lead)', financeId: 'cfo', financeLabel: 'Wei Lim (CFO)' }
+};
+var APPROVER_CHOICES = {
+  owner: { label: "This agent's owner" },
+  finance: { label: 'Finance lead' },
+  two: { label: '2 people (owner + finance lead)' }
+};
+var UTM = '?utm_source=policy-generator&utm_medium=tool&utm_campaign=policy-generator';
+var SANDBOX_BASE = 'https://agentic-sandbox.pinkwallet.com';
+
+function buildRadios(id, entries, name, checkedKey) {
+  var el = document.getElementById(id);
+  el.innerHTML = entries.map(function (e) {
+    return '<label class="opt"><input type="radio" name="' + name + '" value="' + e.key + '"' + (e.key === checkedKey ? ' checked' : '') + '>' + e.label + '</label>';
+  }).join('');
+}
+buildRadios('q1', Object.keys(BUCKETS).map(function (k) { return { key: k, label: BUCKETS[k].label }; }), 'q1', 'api');
+buildRadios('q4', Object.keys(APPROVER_CHOICES).map(function (k) { return { key: k, label: APPROVER_CHOICES[k].label }; }), 'q4', 'finance');
+buildRadios('q6', [{ key: 'yes', label: 'Yes (recommended)' }, { key: 'no', label: 'No' }], 'q6', 'yes');
+
+function getRadio(name) { var r = document.querySelector('input[name="' + name + '"]:checked'); return r ? r.value : null; }
+function money(n) { return '$' + Number(n).toLocaleString('en-US'); }
+
+function approverFor(bucket, choice) {
+  if (choice === 'owner') return { people: [bucket.ownerId], n: 1, label: bucket.ownerLabel };
+  if (choice === 'two') return { people: [bucket.ownerId, bucket.financeId], n: 2, label: bucket.ownerLabel + ' and ' + bucket.financeLabel + ' (2 of 2)' };
+  return { people: [bucket.financeId], n: 1, label: bucket.financeLabel };
+}
+
+function buildAnswers() {
+  var bucketKey = getRadio('q1');
+  var monthly = Math.max(1, Math.round(+document.getElementById('q2').value || 0));
+  var autoApprove = Math.max(1, Math.round(+document.getElementById('q3').value || 0));
+  var approverChoice = getRadio('q4');
+  var hardStopRaw = document.getElementById('q5').value;
+  var hardStop = hardStopRaw ? Math.max(autoApprove + 1, Math.round(+hardStopRaw)) : null;
+  var blockRisky = getRadio('q6') === 'yes';
+  var bucket = BUCKETS[bucketKey];
+  var approvers = approverFor(bucket, approverChoice);
+  return { bucket: bucket, monthly: monthly, autoApprove: autoApprove, approvers: approvers, hardStop: hardStop, blockRisky: blockRisky };
+}
+
+function buildRules(a) {
+  var rules = [];
+  if (a.blockRisky) {
+    rules.push({ id: 'r_block', name: 'Never: gift cards, crypto, gambling', agents: '*', payee: 'cat:blocked', min: 0, max: null, window: 'tx', action: 'block' });
+  }
+  if (a.hardStop) {
+    rules.push({ id: 'r_hardstop', name: a.bucket.label.split(' (')[0] + ': hard stop at ' + money(a.hardStop) + '/day', agents: [a.bucket.agentId], payee: 'cat:' + a.bucket.cat, min: a.hardStop, max: null, window: 'day', action: 'block' });
+  }
+  rules.push({ id: 'r_allow', name: a.bucket.label.split(' (')[0] + ' auto-approved up to ' + money(a.autoApprove), agents: [a.bucket.agentId], payee: 'cat:' + a.bucket.cat, min: 0, max: a.autoApprove, window: 'tx', action: 'allow' });
+  rules.push({ id: 'r_ask', name: a.bucket.label.split(' (')[0] + ' above ' + money(a.autoApprove) + ': ' + a.approvers.label.replace(/ \(\d+ of \d+\)$/, '') + ' approves', agents: [a.bucket.agentId], payee: 'cat:' + a.bucket.cat, min: a.autoApprove, max: null, window: 'tx', action: 'ask', approvers: { people: a.approvers.people, n: a.approvers.n } });
+  return rules;
+}
+
+function buildPolicyText(a) {
+  var lines = [];
+  if (a.blockRisky) lines.push('If ' + a.bucket.agentLabel + ' tries to pay a blocked category (gift cards, crypto, cash, casino or gambling payees), it is always blocked, no matter the amount.');
+  if (a.hardStop) lines.push('If ' + a.bucket.cat + '-category spending for ' + a.bucket.agentLabel + ' would pass ' + money(a.hardStop) + ' in one calendar day, the payment is blocked outright. There is no approval path above this line.');
+  lines.push('Payments up to ' + money(a.autoApprove) + ' per transaction go through automatically, no human involved.');
+  lines.push('Payments above ' + money(a.autoApprove) + (a.hardStop ? (' and up to ' + money(a.hardStop) + ' per day') : '') + ' are sent to ' + a.approvers.label + ' for approval.');
+  lines.push(a.bucket.agentLabel + ' has a monthly budget of ' + money(a.monthly) + '. Once that is spent, every payment is blocked regardless of the rules above.');
+  lines.push('Rules are checked in this order, top to bottom. The first rule that matches a payment decides it. If nothing matches, the payment is blocked by default.');
+  return lines;
+}
+
+function curlScript(a, rules) {
+  var rulesCompact = JSON.stringify({ rules: rules });
+  return [
+    '# 1) create a free sandbox workspace (returns admin_key and each agent\'s key)',
+    'curl -s -X POST ' + SANDBOX_BASE + '/v1/sandbox/workspaces \\',
+    '  -H "Content-Type: application/json" \\',
+    '  -d \'{"template":"' + a.bucket.template + '","company":"My Company"}\'',
+    '',
+    '# 2) load the rules above (use the admin_key from step 1)',
+    'curl -s -X PUT ' + SANDBOX_BASE + '/v1/admin/rules \\',
+    '  -H "Authorization: Bearer <ADMIN_KEY>" -H "Content-Type: application/json" \\',
+    '  -d \'' + rulesCompact + '\'',
+    '',
+    '# 3) set ' + a.bucket.agentLabel + '\'s monthly budget (use the admin_key from step 1)',
+    'curl -s -X PATCH ' + SANDBOX_BASE + '/v1/admin/agents/' + a.bucket.agentId + ' \\',
+    '  -H "Authorization: Bearer <ADMIN_KEY>" -H "Content-Type: application/json" \\',
+    '  -d \'{"monthly":' + a.monthly + '}\'',
+    '',
+    '# 4) check a payment against the policy (use that agent\'s own key, no money moves)',
+    'curl -s -X POST ' + SANDBOX_BASE + '/v1/payments/check \\',
+    '  -H "Authorization: Bearer <AGENT_KEY>" -H "Content-Type: application/json" \\',
+    '  -d \'{"payee_id":"' + a.bucket.payeeId + '","amount":' + a.autoApprove + ',"currency":"USD","purpose":"test"}\''
+  ].join('\n');
+}
+
+var lastAnswers = null, lastRules = null;
+
+function generate() {
+  var a = buildAnswers();
+  lastAnswers = a; lastRules = buildRules(a);
+  document.getElementById('policyText').innerHTML = buildPolicyText(a).map(function (l) { return '<li>' + l + '</li>'; }).join('');
+  document.getElementById('rulesJson').textContent = JSON.stringify(lastRules, null, 2);
+  document.getElementById('curlScript').textContent = curlScript(a, lastRules);
+  document.getElementById('output').style.display = 'block';
+  document.getElementById('liveStatus').innerHTML = '';
+  document.getElementById('liveResults').innerHTML = '';
+  document.getElementById('liveLinks').innerHTML = '';
+  document.getElementById('output').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyText(id) {
+  var text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text);
+}
+
+function badge(decision) {
+  var cls = decision === 'would_allow' ? 'badge-allow' : decision === 'would_ask' ? 'badge-ask' : 'badge-block';
+  var txt = decision === 'would_allow' ? 'ALLOW' : decision === 'would_ask' ? 'ASK' : 'BLOCK';
+  return '<span class="badge ' + cls + '">' + txt + '</span>';
+}
+
+async function tryLive() {
+  var a = lastAnswers, rules = lastRules;
+  if (!a) return;
+  var btn = document.getElementById('tryLiveBtn'); btn.disabled = true;
+  var statusEl = document.getElementById('liveStatus');
+  var resultsEl = document.getElementById('liveResults');
+  var linksEl = document.getElementById('liveLinks');
+  resultsEl.innerHTML = ''; linksEl.innerHTML = '';
+  function setStatus(s) { statusEl.innerHTML = s; }
+  try {
+    setStatus('Creating a free sandbox workspace&hellip;');
+    var createRes = await fetch(SANDBOX_BASE + '/v1/sandbox/workspaces', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ template: a.bucket.template, company: 'Policy Generator demo' })
+    });
+    var ws = await createRes.json();
+    if (!ws.admin_key) throw new Error('workspace creation failed: ' + JSON.stringify(ws));
+    // find the right agent by matching the known agent id embedded in its key suffix
+    var agentObj = ws.agents.filter(function (x) { return x.key.indexOf('_' + a.bucket.agentId + '_') !== -1; })[0];
+    if (!agentObj) throw new Error('could not find agent ' + a.bucket.agentId + ' in the new workspace');
+
+    setStatus('Loading your rules onto ' + a.bucket.agentLabel + '&hellip;');
+    var putRes = await fetch(SANDBOX_BASE + '/v1/admin/rules', {
+      method: 'PUT', headers: { Authorization: 'Bearer ' + ws.admin_key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rules: rules })
+    });
+    var putJson = await putRes.json();
+    if (!putRes.ok) throw new Error('loading rules failed: ' + JSON.stringify(putJson));
+
+    setStatus('Reading current spend and setting the monthly budget&hellip;');
+    var budgetRes = await fetch(SANDBOX_BASE + '/v1/budget', { headers: { Authorization: 'Bearer ' + agentObj.key } });
+    var budgetJson = await budgetRes.json();
+    var effectiveMonthly = Math.round((budgetJson.spent_this_month || 0) + a.monthly);
+    var patchRes = await fetch(SANDBOX_BASE + '/v1/admin/agents/' + a.bucket.agentId, {
+      method: 'PATCH', headers: { Authorization: 'Bearer ' + ws.admin_key, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ monthly: effectiveMonthly, perPay: a.autoApprove })
+    });
+    if (!patchRes.ok) throw new Error('setting the budget failed');
+
+    setStatus('Firing 3 test payments&hellip;');
+    var testAllow = Math.max(1, Math.round(a.autoApprove * 0.6));
+    var testAsk = a.hardStop ? Math.round(a.autoApprove + (a.hardStop - a.autoApprove) * 0.5) : Math.round(a.autoApprove * 1.8);
+    var tests;
+    if (a.hardStop) {
+      tests = [
+        { label: 'Small payment, within the auto-approve limit', body: { payee_id: a.bucket.payeeId, amount: testAllow, currency: 'USD', purpose: 'policy generator test' }, expect: 'would_allow' },
+        { label: 'Mid-size payment, needs approval', body: { payee_id: a.bucket.payeeId, amount: testAsk, currency: 'USD', purpose: 'policy generator test' }, expect: 'would_ask' },
+        { label: 'Over the daily hard stop', body: { payee_id: a.bucket.payeeId, amount: Math.round(a.hardStop * 1.25) + 10, currency: 'USD', purpose: 'policy generator test' }, expect: 'would_block' }
+      ];
+    } else if (a.blockRisky) {
+      tests = [
+        { label: 'Small payment, within the auto-approve limit', body: { payee_id: a.bucket.payeeId, amount: testAllow, currency: 'USD', purpose: 'policy generator test' }, expect: 'would_allow' },
+        { label: 'Mid-size payment, needs approval', body: { payee_id: a.bucket.payeeId, amount: testAsk, currency: 'USD', purpose: 'policy generator test' }, expect: 'would_ask' },
+        { label: 'Blocked category (unregistered crypto payee)', body: { payee_name: 'Crypto Payout Services', amount: testAllow, currency: 'USD', purpose: 'policy generator test' }, expect: 'would_block' }
+      ];
+    } else {
+      tests = [
+        { label: 'Small payment, within the auto-approve limit', body: { payee_id: a.bucket.payeeId, amount: testAllow, currency: 'USD', purpose: 'policy generator test' }, expect: 'would_allow' },
+        { label: 'Mid-size payment, needs approval', body: { payee_id: a.bucket.payeeId, amount: testAsk, currency: 'USD', purpose: 'policy generator test' }, expect: 'would_ask' },
+        { label: 'Over the monthly budget', body: { payee_id: a.bucket.payeeId, amount: a.monthly + 50, currency: 'USD', purpose: 'policy generator test' }, expect: 'would_block' }
+      ];
+    }
+
+    var rowsHtml = '';
+    for (var i = 0; i < tests.length; i++) {
+      var t = tests[i];
+      var checkRes = await fetch(SANDBOX_BASE + '/v1/payments/check', {
+        method: 'POST', headers: { Authorization: 'Bearer ' + agentObj.key, 'Content-Type': 'application/json' },
+        body: JSON.stringify(t.body)
+      });
+      var dec = await checkRes.json();
+      rowsHtml += '<div class="resultrow"><div><div class="steplabel">' + t.label + ' &middot; $' + t.body.amount + '</div><div style="font-weight:700">' + (dec.reason || '') + '</div></div>' + badge(dec.decision) + '</div>';
+      rowsHtml += '<div class="trace">' + (dec.trace || []).join('<br>') + '</div>';
+    }
+    resultsEl.innerHTML = rowsHtml;
+
+    setStatus('Done. Rules loaded, budget set, 3 payments checked against your policy on a live sandbox workspace.');
+    linksEl.innerHTML = '<a href="' + ws.urls.console + '&utm_source=policy-generator&utm_medium=tool&utm_campaign=policy-generator" target="_blank" rel="noopener">Open your console &rarr;</a>' +
+      '&nbsp;&middot;&nbsp;<a href="https://pinkwallet.com/agentic/developers/' + UTM + '" target="_blank" rel="noopener">Connect Claude or Cursor over MCP &rarr;</a>';
+  } catch (e) {
+    setStatus('<span style="color:var(--bad)">Something went wrong: ' + (e && e.message ? e.message : e) + '</span>');
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
