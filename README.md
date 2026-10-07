@@ -2,6 +2,8 @@
 
 Answer 6 questions about one AI agent and get a plain-English spending policy, the exact Pink rules JSON, and a live test against the free Pink sandbox that shows allow, ask a person, and block decisions happen for real.
 
+> **New:** can you make an AI agent overspend? Try our open challenge against the sandbox (test money only): [overspend-challenge](https://github.com/Pink-Agentic-Payments/overspend-challenge)
+
 **Use it:** https://pink-agentic-payments.github.io/agent-spending-policy-generator/
 
 Pink Agentic AI Payments enforces per-agent spending policies at the MCP layer, before a payment executes.
